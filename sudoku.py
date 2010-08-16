@@ -20,6 +20,9 @@
 #       Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #       MA 02110-1301, USA.
 import sys
+import thread
+import time
+import os
 
 class Sudoku:
 	def __init__(self):
@@ -99,7 +102,12 @@ class Sudoku:
 		return True
 	
 	def solve(self):
-		self.recsolve(0, self.field)
+		self.found = False
+		thr = thread.start_new_thread(self.recsolve, (0, self.field))
+		while not self.found:
+			os.system("clear")
+			self.print_field(self.field)
+			time.sleep(1)
 		
 	def recsolve(self, start, field):
 		f = field
@@ -109,9 +117,11 @@ class Sudoku:
 				f[start] = n
 				
 				if self.check_field(f):
+					self.field = f
 					some = True
 					if f.count(None) == 0:
 						print "GOT IT"
+						self.found = True
 						self.print_field(f)
 						sys.exit(0)
 					else:
