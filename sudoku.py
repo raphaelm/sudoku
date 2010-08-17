@@ -103,6 +103,7 @@ class Sudoku:
 	
 	def solve(self):
 		self.found = False
+		self.cancel = False
 		self.solve_clear_fields()
 		thr = thread.start_new_thread(self.recsolve, (0, self.field))
 		while not self.found:
@@ -113,8 +114,12 @@ class Sudoku:
 	def solve_quiet(self, nothing=None):
 		self.found = False
 		self.solve_clear_fields()
-		self.recsolve(0, self.field, True)
-	
+		self.cancel = False
+		try:
+			self.recsolve(0, self.field, True)
+		except:
+			pass
+			
 	def check_with(self, field, f, v):
 		before = field[f]
 		field[f] = v
@@ -135,7 +140,9 @@ class Sudoku:
 					self.field[i] = found
 			i += 1
 		
-	def recsolve(self, start, field, q = False):
+	def recsolve(self, start, field, q = False):	
+		if q and self.cancel:
+			thread.exit()
 		f = field
 		if f[start] is None:
 			some = False

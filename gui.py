@@ -213,15 +213,19 @@ class SolveDialog(gtk.Dialog):
 		self.pg = gtk.ProgressBar()
 		self.pg.show()
 		self.pg.set_pulse_step(0.2)
+		self.btncancel = gtk.Button('Abbrechen')
 		carea = self.get_content_area()
 		vbox = gtk.VBox()
+		vbox.pack_end(self.btncancel)
 		vbox.pack_end(self.pg)
 		lb = gtk.Label('Lösung wird berechnet...')
 		lb.show()
 		vbox.pack_end(lb)
 		vbox.show()
+		
 		carea.add(vbox)
 		self.show_all()
+		
 		
 # Main class
 class SudokuGUI:
@@ -246,23 +250,31 @@ class SudokuGUI:
 			err('Dies ist kein regelkonformes Sudoku! :)')
 			return False
 		self.sud.found = False
+		self.sud.cancel = False
 		self.dg = SolveDialog("Berechnung", self.main_win, gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT)
+		self.dg.btncancel.connect('clicked', self.cancel)
 		self.dg.show()
 		self.thr1 = thread.start_new_thread(self.sud.solve_quiet, (None,))
 		self.thr2 = thread.start_new_thread(self.while_solving, (None,))
-		
+	
+	def cancel(self, this):
+		self.sud.cancel = True
+		self.dg.hide()
+		del self.dg
+	
 	def while_solving(self, nothing=None):
-		while not self.sud.found:
+		while not self.sud.found and not self.sud.cancel:
 			self.dg.pg.pulse()
 			time.sleep(0.5)
 		try:
-			self.dg.hide()
-			del self.dg
-			
-			i = 0
-			for f in self.sud.field:
-				self.main_win.fields[i].set_text(str(f))
-				i += 1
+			if not self.sud.cancel:
+				self.dg.hide()
+				del self.dg
+				
+				i = 0
+				for f in self.sud.field:
+					self.main_win.fields[i].set_text(str(f))
+					i += 1
 			
 		except Exception, e:
 			print e
