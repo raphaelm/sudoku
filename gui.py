@@ -40,6 +40,19 @@ def err(text, sectext = None):
 	error_dlg.run()
 	error_dlg.destroy()
 	
+def info(text, sectext = None):
+	if sectext is None:
+		error_dlg = gtk.MessageDialog(type=gtk.MESSAGE_INFO
+					, message_format=text
+					, buttons=gtk.BUTTONS_OK)
+	else:
+		error_dlg = gtk.MessageDialog(type=gtk.MESSAGE_INFO
+					, message_format=text
+					, buttons=gtk.BUTTONS_OK)
+		error_dlg.format_secondary_text(sectext)
+	error_dlg.run()
+	error_dlg.destroy()
+	
 class MainWindow(gtk.Window):
 	
 	def ev_leave(self, this):
@@ -249,11 +262,20 @@ class SudokuGUI:
 		if not self.sud.check_field(self.sud.field):
 			err('Dies ist kein regelkonformes Sudoku! :)')
 			return False
+		if self.sud.field.count(None) == 0:
+			err('Dieses Sudoku ist bereits gelöst! :)')
+			return False
+			
 		self.sud.found = False
 		self.sud.cancel = False
 		self.dg = SolveDialog("Berechnung", self.main_win, gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT)
 		self.dg.btncancel.connect('clicked', self.cancel)
 		self.dg.show()
+		
+		self.idlg = gtk.MessageDialog(self.main_win, type=gtk.MESSAGE_INFO
+			, message_format='Das Rätsel wurde erfolgreich gelöst'
+			, buttons=gtk.BUTTONS_OK)
+		
 		self.thr1 = thread.start_new_thread(self.sud.solve_quiet, (None,))
 		self.thr2 = thread.start_new_thread(self.while_solving, (None,))
 	
@@ -261,6 +283,10 @@ class SudokuGUI:
 		self.sud.cancel = True
 		self.dg.hide()
 		del self.dg
+	
+	def idlgclose(self, this, response):
+		self.idlg.hide()
+		del self.idlg
 	
 	def while_solving(self, nothing=None):
 		while not self.sud.found and not self.sud.cancel:
@@ -270,6 +296,10 @@ class SudokuGUI:
 			if not self.sud.cancel:
 				self.dg.hide()
 				del self.dg
+				
+				self.idlg.format_secondary_text('Fertig gelöst :) Der Vorgang hat %s Sekunden gedauert.' % self.sud.strtime)
+				self.idlg.show_all()
+				self.idlg.connect('response', self.idlgclose)
 				
 				i = 0
 				for f in self.sud.field:

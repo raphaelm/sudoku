@@ -22,7 +22,11 @@
 import sys
 import thread
 import time
+import datetime
 import os
+
+def newFill(fillString, toLength, fillChar):
+    return ''.join([fillChar for x in range(len(fillString),toLength)])+fillString
 
 class Sudoku:
 	def __init__(self):
@@ -104,6 +108,7 @@ class Sudoku:
 	def solve(self):
 		self.found = False
 		self.cancel = False
+		self.started = datetime.datetime.now()
 		self.solve_clear_fields()
 		thr = thread.start_new_thread(self.recsolve, (0, self.field))
 		while not self.found:
@@ -115,6 +120,7 @@ class Sudoku:
 		self.found = False
 		self.solve_clear_fields()
 		self.cancel = False
+		self.started = datetime.datetime.now()
 		try:
 			self.recsolve(0, self.field, True)
 		except:
@@ -154,13 +160,17 @@ class Sudoku:
 					some = True
 					if f.count(None) == 0:
 						if not q:
-							print "GOT IT"
+							delta = datetime.datetime.now() - self.started
+							self.strtime = str(delta.seconds) + "." + newFill(str(delta.microseconds), 6, '0')
+							print "GOT IT in %s seconds" % self.strtime
 							self.found = True
 							self.print_field(f)
 							sys.exit(0)
 						else:
 							self.found = True
 							self.field = f
+							delta = datetime.datetime.now() - self.started
+							self.strtime = str(delta.seconds) + "." + newFill(str(delta.microseconds), 6, '0')
 							thread.exit()
 					else:
 						sub = self.recsolve(start+1, f, q)
