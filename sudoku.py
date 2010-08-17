@@ -103,11 +103,32 @@ class Sudoku:
 	
 	def solve(self):
 		self.found = False
+		self.solve_clear_fields()
 		thr = thread.start_new_thread(self.recsolve, (0, self.field))
 		while not self.found:
 			os.system("clear")
 			self.print_field(self.field)
 			time.sleep(1)
+	
+	def check_with(self, field, f, v):
+		before = field[f]
+		field[f] = v
+		result = self.check_field(field)
+		field[f] = before
+	
+	def solve_clear_fields(self):
+		i = 0
+		for f in self.field:
+			if f is None:
+				c = 0
+				found = None
+				for n in range(1,10):
+					if self.check_with(self.field, i, n):
+						found = n
+						c += 1
+				if c == 1:
+					self.field[i] = found
+			i += 1
 		
 	def recsolve(self, start, field):
 		f = field
