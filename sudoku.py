@@ -110,6 +110,11 @@ class Sudoku:
 			self.print_field(self.field)
 			time.sleep(1)
 	
+	def solve_quiet(self, nothing=None):
+		self.found = False
+		self.solve_clear_fields()
+		self.recsolve(0, self.field, True)
+	
 	def check_with(self, field, f, v):
 		before = field[f]
 		field[f] = v
@@ -130,7 +135,7 @@ class Sudoku:
 					self.field[i] = found
 			i += 1
 		
-	def recsolve(self, start, field):
+	def recsolve(self, start, field, q = False):
 		f = field
 		if f[start] is None:
 			some = False
@@ -141,16 +146,21 @@ class Sudoku:
 					self.field = f
 					some = True
 					if f.count(None) == 0:
-						print "GOT IT"
-						self.found = True
-						self.print_field(f)
-						sys.exit(0)
+						if not q:
+							print "GOT IT"
+							self.found = True
+							self.print_field(f)
+							sys.exit(0)
+						else:
+							self.found = True
+							self.field = f
+							thread.exit()
 					else:
-						sub = self.recsolve(start+1, f)
+						sub = self.recsolve(start+1, f, q)
 						#if not sub:
 						#	continue
 				f[start] = None
 			#if not some:
 			#	pass
 		else:
-			self.recsolve(start+1, field)
+			self.recsolve(start+1, field, q)
